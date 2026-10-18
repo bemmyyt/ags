@@ -19,6 +19,8 @@ export class Vehicle {
   readonly wheels: Wheel[] = [];
   private readonly spawn = new THREE.Vector3(0, 0.82, 25);
   private steering = 0;
+  private throttle = 0;
+  private brake = 0;
   private wheelAngle = 0;
   private grounded = false;
   private visualRoll = 0;
@@ -70,7 +72,12 @@ export class Vehicle {
     const steerInput = (input.down('KeyD', 'ArrowRight') ? 1 : 0) - (input.down('KeyA', 'ArrowLeft') ? 1 : 0);
     const steeringLimit = THREE.MathUtils.lerp(0.7, 0.22, THREE.MathUtils.clamp(Math.abs(forwardSpeed) / 40, 0, 1));
     this.steering = THREE.MathUtils.damp(this.steering, steerInput * steeringLimit * steeringSensitivity, 10, dt);
-    const wantsReverse = brakeKey && forwardSpeed < 0.8; const driveForce = accelerate ? 12500 : wantsReverse ? -7200 : 0; const braking = brakeKey && !wantsReverse;
+    const wantsReverse = brakeKey && forwardSpeed < 0.8;
+    const throttleTarget = accelerate ? 1 : wantsReverse ? -0.58 : 0;
+    this.throttle = THREE.MathUtils.damp(this.throttle, throttleTarget, 7.5, dt);
+    this.brake = THREE.MathUtils.damp(this.brake, brakeKey && !wantsReverse ? 1 : 0, 12, dt);
+    const engineFade = THREE.MathUtils.lerp(1, 0.42, THREE.MathUtils.clamp(Math.abs(forwardSpeed) / 58, 0, 1));
+    const driveForce = this.throttle * 13800 * engineFade; const braking = this.brake > 0.02;
     let contacts = 0; let lateralVelocity = 0;
     for (const wheel of this.wheels) {
       const mount = bodyPosition.clone().add(wheel.local.clone().applyQuaternion(rotation));
@@ -88,7 +95,7 @@ export class Vehicle {
       const longitudinal = pointVelocity.dot(wheelForward); const lateral = pointVelocity.dot(wheelRight); lateralVelocity += lateral;
       const axleGrip = handbrake && !wheel.front ? 0.52 : 1; const peakGrip = spring * (1.23 * axleGrip);
       const lateralForce = THREE.MathUtils.clamp(-lateral * 12500, -peakGrip, peakGrip);
-      let longitudinalForce = -longitudinal * 120; if (!wheel.front) longitudinalForce += driveForce * 0.5; if (braking) longitudinalForce += -Math.sign(longitudinal || forwardSpeed) * 6500;
+      let longitudinalForce = -longitudinal * 120; if (!wheel.front) longitudinalForce += driveForce * 0.5; if (braking) longitudinalForce += -Math.sign(longitudinal || forwardSpeed) * 7600 * this.brake;
       const availableLongitudinal = Math.sqrt(Math.max(0, peakGrip * peakGrip - lateralForce * lateralForce)); longitudinalForce = THREE.MathUtils.clamp(longitudinalForce, -availableLongitudinal, availableLongitudinal);
       const force = wheelForward.multiplyScalar(longitudinalForce).add(wheelRight.multiplyScalar(lateralForce)); this.body.applyImpulseAtPoint({ x: force.x * dt, y: force.y * dt, z: force.z * dt }, contact, true);
     }
@@ -96,7 +103,8 @@ export class Vehicle {
     if (contacts) { const drag = velocity.clone().multiplyScalar(-speed * 0.72); this.body.applyImpulse({ x: drag.x * dt, y: 0, z: drag.z * dt }, true); this.body.applyImpulse({ x: 0, y: -Math.min(speed * speed * 2.1, 2100) * dt, z: 0 }, true); }
     // Prevent unrecoverable flips while retaining visible pitch and roll from tire loads.
     const uprightError = bodyUp.clone().cross(UP).multiplyScalar(1300); const angular = this.body.angvel();
-    this.body.applyTorqueImpulse({ x: uprightError.x * dt - angular.x * 65 * dt, y: 0, z: uprightError.z * dt - angular.z * 65 * dt }, true);
+    const yawDamping = handbrake ? 180 : 720;
+    this.body.applyTorqueImpulse({ x: uprightError.x * dt - angular.x * 65 * dt, y: -angular.y * yawDamping * dt, z: uprightError.z * dt - angular.z * 65 * dt }, true);
     const kph = Math.abs(forwardSpeed) * 3.6; const averageLateral = contacts ? lateralVelocity / contacts : 0; const drifting = Math.abs(averageLateral) > 2.8 && speed > 7 && (handbrake || Math.abs(this.steering) > 0.2);
     const gear = forwardSpeed < -1 ? 'R' : kph < 1 ? 'N' : String(Math.min(6, Math.floor(kph / 37) + 1));
     this.telemetry = { speedKph: kph, rpm: THREE.MathUtils.clamp(900 + Math.abs(forwardSpeed) * 180 + Math.abs(driveForce) * 0.075, 850, 7200), gear, drifting, grounded: this.grounded };
