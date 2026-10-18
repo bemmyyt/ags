@@ -1,0 +1,349 @@
+# PROJECT: OPEN ROAD — High-Quality 3D Browser Driving Game
+
+You are the lead game developer, gameplay programmer, technical artist, and QA engineer for a new 3D browser game called **OPEN ROAD**.
+
+## 1. Project vision
+
+Build a polished, playable, open-world 3D driving game where players can freely explore a detailed environment, encounter NPC drivers, and challenge them to races.
+
+The game should feel inspired by Forza Horizon, Need for Speed, and PolyTrack, but have its own visual identity and original gameplay systems.
+
+**IMPORTANT: This must not feel like a generic AI-generated game or a basic Three.js demonstration.**
+
+Prioritize gameplay quality, vehicle handling, world design, performance, and visual polish over the number of features.
+
+Do not build a giant collection of unfinished systems.
+
+## 2. Technology requirements
+
+Use the following stack:
+
+- TypeScript
+- Three.js for 3D rendering
+- Rapier 3D for physics
+- Vite for development and builds
+- HTML/CSS for UI
+- IndexedDB or localStorage for saving progress
+
+The game must run in modern desktop browsers without requiring plugins or downloads.
+
+Target 60 FPS on typical gaming PCs, with adjustable graphics settings for weaker hardware.
+
+Use modular, maintainable code. Avoid putting the entire game in one file.
+
+## 3. Vehicle driving system
+
+This is the most important part of the project.
+
+Implement a proper arcade-simulation hybrid driving model.
+
+Requirements:
+
+- Smooth acceleration and braking
+- Speed-dependent steering
+- Realistic-feeling grip and traction
+- Progressive oversteer and understeer
+- Drifting with controllable slides
+- Suspension and body roll
+- Weight transfer during braking and cornering
+- Handbrake
+- Reverse gear
+- Ground detection
+- Stable collision responses
+- Vehicle recovery/reset system
+
+Use Rapier's physics capabilities where appropriate, with a custom vehicle controller if necessary.
+
+Do not simply translate or rotate the car mesh to simulate driving.
+
+The vehicle must have a physical body and interact with the environment.
+
+Tune the handling until it feels responsive and satisfying.
+
+## 4. Camera system
+
+Implement a polished third-person chase camera.
+
+Features:
+
+- Smooth position interpolation
+- Speed-sensitive field of view
+- Camera lag during acceleration
+- Slight rotation during drifting
+- Automatic obstacle avoidance where practical
+- Camera reset
+- Optional hood camera
+
+Avoid excessive camera shaking.
+
+## 5. Open-world environment
+
+Build a compact, carefully designed, interconnected map.
+
+Include:
+
+- A small modern city district
+- Suburban streets
+- A highway
+- A winding mountain road
+- A scenic coastal section
+- Intersections and junctions
+- Road signs, barriers, sidewalks, and streetlights
+- Trees, buildings, terrain, and environmental details
+
+Roads must connect logically and be enjoyable to drive on.
+
+Use reusable assets and procedural placement where appropriate.
+
+Avoid giant empty spaces, random floating objects, and repetitive scenery.
+
+The initial map should be small enough to polish properly.
+
+## 6. NPC traffic
+
+Create an actual NPC traffic system.
+
+NPC vehicles must:
+
+- Follow road networks
+- Navigate intersections
+- Maintain appropriate speeds
+- Brake for slower vehicles
+- Avoid collisions where possible
+- React to the player's vehicle
+- Recover from minor navigation problems
+- Spawn and despawn intelligently
+
+Use road graphs, waypoints, or splines.
+
+Do not make NPCs drive randomly across the terrain.
+
+## 7. NPC racing
+
+Players must be able to challenge NPC drivers to races.
+
+Implement:
+
+- Race initiation near eligible NPC vehicles
+- Clear race start countdown
+- Race routes with checkpoints
+- NPC opponents that follow racing routes
+- Different NPC skill levels
+- Race position tracking
+- Finish detection
+- Race results screen
+- Rewards for winning
+- Race retry functionality
+
+Racing NPCs should adjust speed for corners, brake intelligently, and recover when they make mistakes.
+
+NPCs should not simply teleport between checkpoints.
+
+## 8. Graphics and art direction
+
+Use a polished, stylized-realistic visual style.
+
+Prioritize:
+
+- Attractive lighting
+- Soft shadows
+- Consistent materials
+- Proper car proportions
+- Good road textures
+- Environmental depth
+- Atmospheric fog
+- Sky and sun lighting
+- Tasteful post-processing
+- Smooth animations
+
+Avoid the typical appearance of an AI-generated prototype: primitive boxes everywhere, flat untextured terrain, unrealistic car models, and inconsistent scaling.
+
+Use legally reusable assets where appropriate and document their licenses. Do not assume external assets are available; provide polished procedural fallbacks.
+
+## 9. User interface
+
+Create a clean, modern interface.
+
+Include:
+
+- Main menu
+- Pause menu
+- Speedometer
+- Tachometer if supported by the driving model
+- Gear indicator
+- Race countdown
+- Race position
+- Race results
+- Settings
+- Graphics options
+- Controls guide
+
+Use smooth transitions and consistent typography.
+
+The UI should feel like a finished game, not a developer debugging panel.
+
+## 10. Controls
+
+Keyboard controls:
+
+- W / Up Arrow — Accelerate
+- S / Down Arrow — Brake / Reverse
+- A / D — Steering
+- Space — Handbrake
+- R — Reset vehicle
+- C — Change camera
+- Esc — Pause
+
+Support adjustable steering sensitivity.
+
+Prevent browser scrolling during gameplay.
+
+## 11. Audio
+
+Implement a functional audio system supporting:
+
+- Engine sound that responds to RPM or speed
+- Tire squealing
+- Collision sounds
+- Race countdown sounds
+- UI feedback
+
+Use properly licensed audio assets or generated procedural audio.
+
+Provide volume controls.
+
+## 12. Performance
+
+Optimize the game for browser execution.
+
+Requirements:
+
+- Frustum culling
+- Instanced rendering for repeated objects
+- Efficient collision shapes
+- Sensible shadow quality
+- Limited physics overhead
+- Object pooling where useful
+- Adaptive NPC traffic density
+- Avoid unnecessary per-frame allocations
+
+Do not sacrifice driving quality merely to increase visual effects.
+
+## 13. Code quality
+
+Use a clear project structure separating:
+
+- Core game loop
+- Rendering
+- Physics
+- Vehicle controller
+- Camera
+- World generation
+- Traffic AI
+- Racing AI
+- Race management
+- UI
+- Audio
+- Save system
+
+Keep gameplay logic independent from rendering where practical.
+
+Use fixed-timestep physics updates.
+
+Handle errors gracefully.
+
+Avoid placeholder implementations that silently pretend to work.
+
+## 14. Development process
+
+**Do not attempt to implement every feature simultaneously.**
+
+Work in milestones.
+
+### Milestone 1 — Driving prototype
+
+Build:
+
+1. A working Three.js scene
+2. A properly modeled, recognizable car
+3. Rapier physics
+4. A tuned vehicle controller
+5. A smooth chase camera
+6. A small driving test environment
+7. A functional speedometer
+8. Vehicle reset
+9. A working Vite development setup
+
+The first milestone must be genuinely playable.
+
+Do not begin implementing the full city, traffic, garage, or races until the basic driving system works reliably.
+
+### Milestone 2 — Environment
+
+Build a compact, attractive interconnected road network with collision geometry and scenery.
+
+### Milestone 3 — Traffic
+
+Implement functioning NPC vehicles and road navigation.
+
+### Milestone 4 — Racing
+
+Implement NPC challenges, racing AI, checkpoints, and results.
+
+### Milestone 5 — Polish
+
+Improve graphics, audio, UI, performance, gameplay balance, and reliability.
+
+## 15. Testing requirements
+
+After each milestone:
+
+- Run the project.
+- Check TypeScript errors.
+- Run the production build.
+- Test available gameplay logic.
+- Verify that critical systems are connected correctly.
+- Fix errors before continuing.
+- If browser automation is available, test actual browser gameplay.
+- Clearly state anything that could not be tested.
+
+Do not claim a feature works unless it has been implemented and reasonably verified.
+
+## 16. Quality standards
+
+The following are unacceptable:
+
+- A car represented by a basic rectangular box
+- Fake physics based entirely on moving a mesh
+- NPCs driving through buildings
+- Disconnected roads
+- Floating environmental objects
+- Broken camera tracking
+- Unresponsive controls
+- Nonfunctional menu buttons
+- Placeholder UI pretending to be finished
+- Huge maps with almost no meaningful content
+- Claiming features are complete when they are not
+
+Make reasonable technical decisions independently, but explain significant tradeoffs.
+
+## 17. Your first task
+
+Inspect the repository and determine whether an existing project needs to be preserved.
+
+If the repository is empty, initialize the TypeScript + Three.js + Rapier + Vite project.
+
+Then **implement Milestone 1 only**.
+
+Create a small but visually attractive driving test area and make the car genuinely enjoyable to control.
+
+Run available checks, fix build errors, and report:
+
+- What was implemented
+- Which files were created or modified
+- How to launch the game
+- What was actually tested
+- Known limitations
+- What should be improved next
+
+**Your priority is not to generate the most code. Your priority is to build the best playable driving experience possible.**
