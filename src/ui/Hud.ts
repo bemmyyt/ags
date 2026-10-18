@@ -1,5 +1,6 @@
 import type { HandlingPreset, VehicleTelemetry } from '../physics/Vehicle';
 import type { RaceDifficulty, RaceSnapshot } from '../racing/RaceSystem';
+import type { ActivitySnapshot } from '../activities/ActivitySystem';
 
 type NoticeTone = 'neutral' | 'warning' | 'success';
 export type GraphicsQuality = 'high' | 'balanced' | 'performance';
@@ -31,6 +32,7 @@ export class Hud {
   private readonly racePosition: HTMLElement;
   private readonly raceCheckpoint: HTMLElement;
   private readonly raceResults: HTMLElement;
+  private readonly activityHud: HTMLElement;
   private readonly raceResultTitle: HTMLElement;
   private readonly raceResultDetail: HTMLElement;
   private notificationTimer?: number;
@@ -63,6 +65,7 @@ export class Hud {
           <div class="race-divider"></div>
           <div class="race-metric"><span>CHECKPOINT</span><strong id="race-checkpoint">1<small>/ 6</small></strong></div>
         </section>
+        <section id="activity-hud" class="activity-hud hidden" aria-live="polite"></section>
 
         <div id="race-prompt" class="race-prompt" role="status" aria-live="polite"></div>
         <div id="race-countdown" class="race-countdown" aria-live="assertive"></div>
@@ -165,6 +168,7 @@ export class Hud {
     this.racePosition = this.byId('race-position');
     this.raceCheckpoint = this.byId('race-checkpoint');
     this.raceResults = this.byId('race-results');
+    this.activityHud = this.byId('activity-hud');
     this.raceResultTitle = this.byId('race-result-title');
     this.raceResultDetail = this.byId('race-result-detail');
     this.restoreSettings();
@@ -284,6 +288,14 @@ export class Hud {
     this.lastRaceState = race.state;
   }
 
+  updateActivities(activities: ActivitySnapshot) {
+    const drift = activities.driftScore > 0 ? `DRIFT ZONE ${activities.driftScore} PTS` : '';
+    const trial = activities.activeTrial ? `TIME TRIAL ${this.formatTime(activities.trialTime)}  ·  ${Math.min(activities.trialCheckpoint + 1, activities.trialTotal)}/${activities.trialTotal}` : '';
+    const text = trial || drift;
+    this.activityHud.textContent = text;
+    this.setHidden(this.activityHud, !text);
+  }
+
   setPaused(value: boolean) {
     this.setHidden(this.pause, !value);
     this.emitAudioCue('open-road:pause', value ? 'paused' : 'resumed');
@@ -327,4 +339,6 @@ export class Hud {
   private emitAudioCue(name: string, detail: string) {
     window.dispatchEvent(new CustomEvent(name, { detail }));
   }
+
+  private formatTime(seconds: number) { const minutes = Math.floor(seconds / 60); return `${minutes}:${(seconds % 60).toFixed(1).padStart(4, '0')}`; }
 }

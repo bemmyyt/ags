@@ -1,6 +1,7 @@
 import * as RAPIER from '@dimforge/rapier3d-compat';
 import * as THREE from 'three';
 import { EngineAudio } from '../audio/EngineAudio';
+import { ActivitySystem } from '../activities/ActivitySystem';
 import { ChaseCamera } from '../camera/ChaseCamera';
 import { Input } from '../core/Input';
 import { Vehicle } from '../physics/Vehicle';
@@ -11,7 +12,7 @@ import { createTestWorld } from '../world/TestWorld';
 
 export class Game {
   private readonly renderer: THREE.WebGLRenderer; private readonly scene = new THREE.Scene(); private readonly camera = new THREE.PerspectiveCamera(64, innerWidth / innerHeight, 0.1, 500);
-  private readonly world = new RAPIER.World({ x: 0, y: -9.81, z: 0 }); private readonly input = new Input(); private readonly vehicle: Vehicle; private readonly chase: ChaseCamera; private readonly audio = new EngineAudio(); private readonly traffic: TrafficSystem; private readonly race: RaceSystem;
+  private readonly world = new RAPIER.World({ x: 0, y: -9.81, z: 0 }); private readonly input = new Input(); private readonly vehicle: Vehicle; private readonly chase: ChaseCamera; private readonly audio = new EngineAudio(); private readonly traffic: TrafficSystem; private readonly race: RaceSystem; private readonly activities = new ActivitySystem();
   private running = false; private paused = false; private accumulator = 0; private last = performance.now();
   private activeGraphics?: GraphicsQuality;
   constructor(private readonly hud: Hud) {
@@ -44,8 +45,8 @@ export class Game {
       if (this.input.take('Escape')) this.setPaused(true);
       this.accumulator += delta; let telemetry = this.vehicle.update(0, this.input, this.hud.steering, this.hud.handlingPreset);
       while (this.accumulator >= 1 / 60) { telemetry = this.vehicle.update(1 / 60, this.input, this.hud.steering, this.hud.handlingPreset); this.world.step(); this.accumulator -= 1 / 60; }
-      this.traffic.update(delta, this.vehicle.position); const race = this.race.update(delta, this.vehicle.position, this.input.take('KeyE'), this.input.take('Enter'), this.hud.raceDifficulty);
-      this.chase.update(delta, this.vehicle, telemetry.speedKph); this.audio.enabled = this.hud.audioEnabled; this.audio.update(telemetry.rpm, telemetry.drifting, telemetry.speedKph); this.hud.update(telemetry, this.chase.mode); this.hud.updateRace(race);
+      this.traffic.update(delta, this.vehicle.position); const race = this.race.update(delta, this.vehicle.position, this.input.take('KeyE'), this.input.take('Enter'), this.hud.raceDifficulty); const activities = this.activities.update(delta, this.vehicle.position, telemetry);
+      this.chase.update(delta, this.vehicle, telemetry.speedKph); this.audio.enabled = this.hud.audioEnabled; this.audio.update(telemetry.rpm, telemetry.drifting, telemetry.speedKph); this.hud.update(telemetry, this.chase.mode); this.hud.updateRace(race); this.hud.updateActivities(activities); if (activities.notice) this.hud.notify(activities.notice.message, activities.notice.tone);
     } else if (this.running && this.input.take('Escape')) this.setPaused(false);
     this.renderer.render(this.scene, this.camera); requestAnimationFrame((time) => this.frame(time));
   }
