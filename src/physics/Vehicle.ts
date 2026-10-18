@@ -68,8 +68,8 @@ export class Vehicle {
     const bodyUp = new THREE.Vector3(0, 1, 0).applyQuaternion(rotation).normalize();
     const rawVelocity = this.body.linvel(); const velocity = new THREE.Vector3(rawVelocity.x, rawVelocity.y, rawVelocity.z); const forwardSpeed = velocity.dot(forward); const speed = velocity.length();
     const accelerate = input.down('KeyW', 'ArrowUp'); const brakeKey = input.down('KeyS', 'ArrowDown'); const handbrake = input.down('Space');
-    // Positive yaw turns right with this model, so A must be negative and D positive.
-    const steerInput = (input.down('KeyD', 'ArrowRight') ? 1 : 0) - (input.down('KeyA', 'ArrowLeft') ? 1 : 0);
+    // Match the rendered car/camera orientation: A/Left is left, D/Right is right.
+    const steerInput = (input.down('KeyA', 'ArrowLeft') ? 1 : 0) - (input.down('KeyD', 'ArrowRight') ? 1 : 0);
     const steeringLimit = THREE.MathUtils.lerp(0.7, 0.22, THREE.MathUtils.clamp(Math.abs(forwardSpeed) / 40, 0, 1));
     this.steering = THREE.MathUtils.damp(this.steering, steerInput * steeringLimit * steeringSensitivity, 10, dt);
     const wantsReverse = brakeKey && forwardSpeed < 0.8;
