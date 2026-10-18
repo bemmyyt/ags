@@ -42,8 +42,8 @@ export class Game {
       if (this.input.take('KeyR')) { this.vehicle.reset(); this.hud.notify('VEHICLE RECOVERED', 'success'); }
       if (this.input.take('KeyC')) { this.chase.toggleMode(); this.hud.notify(`${this.chase.mode} CAMERA`, 'neutral'); }
       if (this.input.take('Escape')) this.setPaused(true);
-      this.accumulator += delta; let telemetry = this.vehicle.update(0, this.input, this.hud.steering);
-      while (this.accumulator >= 1 / 60) { telemetry = this.vehicle.update(1 / 60, this.input, this.hud.steering); this.world.step(); this.accumulator -= 1 / 60; }
+      this.accumulator += delta; let telemetry = this.vehicle.update(0, this.input, this.hud.steering, this.hud.handlingPreset);
+      while (this.accumulator >= 1 / 60) { telemetry = this.vehicle.update(1 / 60, this.input, this.hud.steering, this.hud.handlingPreset); this.world.step(); this.accumulator -= 1 / 60; }
       this.traffic.update(delta, this.vehicle.position); const race = this.race.update(delta, this.vehicle.position, this.input.take('KeyE'), this.input.take('Enter'));
       this.chase.update(delta, this.vehicle, telemetry.speedKph); this.audio.enabled = this.hud.audioEnabled; this.audio.update(telemetry.rpm, telemetry.drifting); this.hud.update(telemetry, this.chase.mode); this.hud.updateRace(race);
     } else if (this.running && this.input.take('Escape')) this.setPaused(false);

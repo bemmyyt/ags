@@ -1,4 +1,4 @@
-import type { VehicleTelemetry } from '../physics/Vehicle';
+import type { HandlingPreset, VehicleTelemetry } from '../physics/Vehicle';
 import type { RaceSnapshot } from '../racing/RaceSystem';
 
 type NoticeTone = 'neutral' | 'warning' | 'success';
@@ -22,6 +22,7 @@ export class Hud {
   private readonly volumeInput: HTMLInputElement;
   private readonly volumeValue: HTMLElement;
   private readonly graphicsInput: HTMLSelectElement;
+  private readonly handlingInput: HTMLSelectElement;
   private readonly notification: HTMLElement;
   private readonly raceHud: HTMLElement;
   private readonly racePrompt: HTMLElement;
@@ -100,6 +101,10 @@ export class Hud {
               <label for="graphics">GRAPHICS QUALITY</label>
               <select id="graphics" aria-label="Graphics quality"><option value="high">HIGH — FULL SHADOWS</option><option value="balanced">BALANCED</option><option value="performance">PERFORMANCE — LOW GPU</option></select>
             </div>
+            <div class="setting-row graphics-setting">
+              <label for="handling">HANDLING PRESET</label>
+              <select id="handling" aria-label="Vehicle handling preset"><option value="arcade">ARCADE — EASY DRIFTS</option><option value="balanced" selected>BALANCED — DEFAULT</option><option value="simulation">SIM-INSPIRED — PRECISE</option></select>
+            </div>
             <label class="toggle-setting" for="audio"><input id="audio" type="checkbox" checked /> <span class="toggle-indicator" aria-hidden="true"></span><span>ENGINE &amp; TIRE AUDIO</span></label>
           </div>
           <div class="control-guide" aria-label="Keyboard controls">
@@ -146,6 +151,7 @@ export class Hud {
     this.volumeInput = this.inputById('master-volume');
     this.volumeValue = this.byId('volume-value');
     this.graphicsInput = this.selectById('graphics');
+    this.handlingInput = this.selectById('handling');
     this.notification = this.byId('notification');
     this.raceHud = this.byId('race-hud');
     this.racePrompt = this.byId('race-prompt');
@@ -182,22 +188,24 @@ export class Hud {
     this.volumeInput.addEventListener('input', () => { this.updateSettingLabels(); save(); });
     this.audioInput.addEventListener('change', save);
     this.graphicsInput.addEventListener('change', save);
+    this.handlingInput.addEventListener('change', save);
     this.updateSettingLabels();
   }
 
   private restoreSettings() {
     try {
-      const saved = JSON.parse(localStorage.getItem('open-road-settings') ?? '{}') as { steering?: number; volume?: number; audio?: boolean; graphics?: GraphicsQuality };
+      const saved = JSON.parse(localStorage.getItem('open-road-settings') ?? '{}') as { steering?: number; volume?: number; audio?: boolean; graphics?: GraphicsQuality; handling?: HandlingPreset };
       if (typeof saved.steering === 'number') this.steeringInput.value = String(Math.min(1.45, Math.max(0.6, saved.steering)));
       if (typeof saved.volume === 'number') this.volumeInput.value = String(Math.min(100, Math.max(0, saved.volume)));
       if (typeof saved.audio === 'boolean') this.audioInput.checked = saved.audio;
       if (saved.graphics === 'high' || saved.graphics === 'balanced' || saved.graphics === 'performance') this.graphicsInput.value = saved.graphics;
+      if (saved.handling === 'arcade' || saved.handling === 'balanced' || saved.handling === 'simulation') this.handlingInput.value = saved.handling;
     } catch { /* Storage is optional in private browser contexts. */ }
   }
 
   private saveSettings() {
     try {
-      localStorage.setItem('open-road-settings', JSON.stringify({ steering: this.steering, volume: this.masterVolume, audio: this.audioEnabled, graphics: this.graphicsQuality }));
+      localStorage.setItem('open-road-settings', JSON.stringify({ steering: this.steering, volume: this.masterVolume, audio: this.audioEnabled, graphics: this.graphicsQuality, handling: this.handlingPreset }));
     } catch { /* Storage is optional in private browser contexts. */ }
   }
 
@@ -286,6 +294,7 @@ export class Hud {
   get audioEnabled() { return this.audioInput.checked; }
   get masterVolume() { return Number(this.volumeInput.value); }
   get graphicsQuality() { return this.graphicsInput.value as GraphicsQuality; }
+  get handlingPreset() { return this.handlingInput.value as HandlingPreset; }
 
   toggleSettings() {
     const willOpen = this.settingsPanel.classList.contains('hidden');
