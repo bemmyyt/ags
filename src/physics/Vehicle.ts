@@ -60,6 +60,8 @@ export class Vehicle {
   update(dt: number, input: Input, steeringSensitivity: number): VehicleTelemetry {
     if (dt === 0) return this.telemetry;
     const q = this.body.rotation(); const rotation = new THREE.Quaternion(q.x, q.y, q.z, q.w); const bodyPosition = this.position;
+    // A failed collision should never turn into an unrecoverable launch.
+    if (bodyPosition.y > 12 || bodyPosition.y < -5) { this.reset(); return this.telemetry; }
     const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(rotation).normalize();
     const bodyUp = new THREE.Vector3(0, 1, 0).applyQuaternion(rotation).normalize();
     const rawVelocity = this.body.linvel(); const velocity = new THREE.Vector3(rawVelocity.x, rawVelocity.y, rawVelocity.z); const forwardSpeed = velocity.dot(forward); const speed = velocity.length();
@@ -78,7 +80,9 @@ export class Vehicle {
       contacts += 1;
       const suspensionLength = Math.max(0, hit.timeOfImpact - WHEEL_RADIUS); const compression = THREE.MathUtils.clamp(SPRING_REST - suspensionLength, -0.18, 0.24); wheel.compression = compression;
       const contact = mount.clone().addScaledVector(DOWN, hit.timeOfImpact); const pointVelocity = this.velocityAtPoint(contact, bodyPosition, velocity); const verticalVelocity = pointVelocity.dot(UP);
-      const spring = THREE.MathUtils.clamp(compression * 30000 - verticalVelocity * 3900, 0, 9200); this.applyForce(UP, spring, contact);
+      // Conservative, overdamped suspension: enough travel to show weight transfer
+      // without the energy gain that can launch a light browser physics chassis.
+      const spring = THREE.MathUtils.clamp(compression * 18000 - verticalVelocity * 5200, 0, 5200); this.applyForce(UP, spring, contact);
       const wheelForward = forward.clone(); if (wheel.front) wheelForward.applyAxisAngle(UP, this.steering);
       const wheelRight = new THREE.Vector3(1, 0, 0).applyQuaternion(rotation); if (wheel.front) wheelRight.applyAxisAngle(UP, this.steering);
       const longitudinal = pointVelocity.dot(wheelForward); const lateral = pointVelocity.dot(wheelRight); lateralVelocity += lateral;
