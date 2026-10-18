@@ -10,6 +10,8 @@ export class EngineAudio {
   private subGain?: GainNode;
   private tireFilter?: BiquadFilterNode;
   private tireGain?: GainNode;
+  private windFilter?: BiquadFilterNode;
+  private windGain?: GainNode;
   private paused = false;
   private documentHidden = false;
   enabled = true;
@@ -94,15 +96,29 @@ export class EngineAudio {
     this.tireFilter = tireFilter;
     this.tireGain = tireGain;
 
+    // A separate, low-key wind layer makes real highway velocity audible without
+    // turning the engine mix into a constant hiss at town speeds.
+    const windFilter = context.createBiquadFilter();
+    windFilter.type = 'bandpass';
+    windFilter.frequency.value = 540;
+    windFilter.Q.value = 0.55;
+    const windGain = context.createGain();
+    windGain.gain.value = 0.0001;
+    windFilter.connect(windGain).connect(master);
+    this.noiseSource(context).connect(windFilter);
+    this.windFilter = windFilter;
+    this.windGain = windGain;
+
     void context.resume().catch(() => undefined);
     this.updateMaster();
   }
 
-  update(rpm: number, drifting: boolean) {
+  update(rpm: number, drifting: boolean, speedKph = 0) {
     const context = this.context;
-    if (!context || !this.engineFilter || !this.engineGain || !this.subGain || !this.tireFilter || !this.tireGain) return;
+    if (!context || !this.engineFilter || !this.engineGain || !this.subGain || !this.tireFilter || !this.tireGain || !this.windFilter || !this.windGain) return;
     const normalizedRpm = Math.min(1, Math.max(0, (rpm - 850) / 6350));
     const firingFrequency = 28 + rpm / 42;
+    const highway = Math.min(1, Math.max(0, (speedKph - 38) / 175));
 
     // The nodes are found through the graph only once, so frequency updates are
     // intentionally kept on the source oscillators' parameters via saved aliases.
@@ -112,7 +128,10 @@ export class EngineAudio {
     this.smooth(this.engineGain.gain, 0.035 + normalizedRpm * 0.075, 0.06);
     this.smooth(this.subGain.gain, 0.014 + (1 - normalizedRpm) * 0.024, 0.08);
     this.smooth(this.tireFilter.frequency, 1050 + normalizedRpm * 1850, 0.055);
-    this.smooth(this.tireGain.gain, drifting ? 0.025 + normalizedRpm * 0.055 : 0.0001, drifting ? 0.035 : 0.12);
+    const roadNoise = highway * 0.014;
+    this.smooth(this.tireGain.gain, drifting ? 0.025 + normalizedRpm * 0.055 : roadNoise + 0.0001, drifting ? 0.035 : 0.12);
+    this.smooth(this.windFilter.frequency, 430 + highway * 980, 0.12);
+    this.smooth(this.windGain.gain, 0.0001 + highway * highway * 0.042, 0.16);
     this.updateMaster();
   }
 

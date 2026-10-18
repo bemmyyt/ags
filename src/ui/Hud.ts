@@ -1,5 +1,5 @@
 import type { HandlingPreset, VehicleTelemetry } from '../physics/Vehicle';
-import type { RaceSnapshot } from '../racing/RaceSystem';
+import type { RaceDifficulty, RaceSnapshot } from '../racing/RaceSystem';
 
 type NoticeTone = 'neutral' | 'warning' | 'success';
 export type GraphicsQuality = 'high' | 'balanced' | 'performance';
@@ -23,6 +23,7 @@ export class Hud {
   private readonly volumeValue: HTMLElement;
   private readonly graphicsInput: HTMLSelectElement;
   private readonly handlingInput: HTMLSelectElement;
+  private readonly raceDifficultyInput: HTMLSelectElement;
   private readonly notification: HTMLElement;
   private readonly raceHud: HTMLElement;
   private readonly racePrompt: HTMLElement;
@@ -105,6 +106,10 @@ export class Hud {
               <label for="handling">HANDLING PRESET</label>
               <select id="handling" aria-label="Vehicle handling preset"><option value="arcade">ARCADE — EASY DRIFTS</option><option value="balanced" selected>BALANCED — DEFAULT</option><option value="simulation">SIM-INSPIRED — PRECISE</option></select>
             </div>
+            <div class="setting-row graphics-setting">
+              <label for="race-difficulty">RACE DIFFICULTY</label>
+              <select id="race-difficulty" aria-label="Race difficulty"><option value="easy">EASY — FORGIVING</option><option value="normal" selected>NORMAL — COMPETITIVE</option><option value="hard">HARD — NO GIFTS</option></select>
+            </div>
             <label class="toggle-setting" for="audio"><input id="audio" type="checkbox" checked /> <span class="toggle-indicator" aria-hidden="true"></span><span>ENGINE &amp; TIRE AUDIO</span></label>
           </div>
           <div class="control-guide" aria-label="Keyboard controls">
@@ -152,6 +157,7 @@ export class Hud {
     this.volumeValue = this.byId('volume-value');
     this.graphicsInput = this.selectById('graphics');
     this.handlingInput = this.selectById('handling');
+    this.raceDifficultyInput = this.selectById('race-difficulty');
     this.notification = this.byId('notification');
     this.raceHud = this.byId('race-hud');
     this.racePrompt = this.byId('race-prompt');
@@ -189,23 +195,25 @@ export class Hud {
     this.audioInput.addEventListener('change', save);
     this.graphicsInput.addEventListener('change', save);
     this.handlingInput.addEventListener('change', save);
+    this.raceDifficultyInput.addEventListener('change', save);
     this.updateSettingLabels();
   }
 
   private restoreSettings() {
     try {
-      const saved = JSON.parse(localStorage.getItem('open-road-settings') ?? '{}') as { steering?: number; volume?: number; audio?: boolean; graphics?: GraphicsQuality; handling?: HandlingPreset };
+      const saved = JSON.parse(localStorage.getItem('open-road-settings') ?? '{}') as { steering?: number; volume?: number; audio?: boolean; graphics?: GraphicsQuality; handling?: HandlingPreset; raceDifficulty?: RaceDifficulty };
       if (typeof saved.steering === 'number') this.steeringInput.value = String(Math.min(1.45, Math.max(0.6, saved.steering)));
       if (typeof saved.volume === 'number') this.volumeInput.value = String(Math.min(100, Math.max(0, saved.volume)));
       if (typeof saved.audio === 'boolean') this.audioInput.checked = saved.audio;
       if (saved.graphics === 'high' || saved.graphics === 'balanced' || saved.graphics === 'performance') this.graphicsInput.value = saved.graphics;
       if (saved.handling === 'arcade' || saved.handling === 'balanced' || saved.handling === 'simulation') this.handlingInput.value = saved.handling;
+      if (saved.raceDifficulty === 'easy' || saved.raceDifficulty === 'normal' || saved.raceDifficulty === 'hard') this.raceDifficultyInput.value = saved.raceDifficulty;
     } catch { /* Storage is optional in private browser contexts. */ }
   }
 
   private saveSettings() {
     try {
-      localStorage.setItem('open-road-settings', JSON.stringify({ steering: this.steering, volume: this.masterVolume, audio: this.audioEnabled, graphics: this.graphicsQuality, handling: this.handlingPreset }));
+      localStorage.setItem('open-road-settings', JSON.stringify({ steering: this.steering, volume: this.masterVolume, audio: this.audioEnabled, graphics: this.graphicsQuality, handling: this.handlingPreset, raceDifficulty: this.raceDifficulty }));
     } catch { /* Storage is optional in private browser contexts. */ }
   }
 
@@ -295,6 +303,7 @@ export class Hud {
   get masterVolume() { return Number(this.volumeInput.value); }
   get graphicsQuality() { return this.graphicsInput.value as GraphicsQuality; }
   get handlingPreset() { return this.handlingInput.value as HandlingPreset; }
+  get raceDifficulty() { return this.raceDifficultyInput.value as RaceDifficulty; }
 
   toggleSettings() {
     const willOpen = this.settingsPanel.classList.contains('hidden');
