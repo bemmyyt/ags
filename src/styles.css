@@ -107,7 +107,7 @@ button:active { transform: translateX(2px) scale(.985); }
 button.ghost { color: #e9f0ec; background: rgb(255 255 255 / 9%); border-color: rgb(255 255 255 / 30%); box-shadow: none; }
 button.ghost:hover { border-color: rgb(255 204 113 / 80%); background: rgb(255 255 255 / 15%); }
 button.ghost span { color: #ffc25c; font-size: 16px; line-height: .4; }
-button:focus-visible, input:focus-visible { outline: 2px solid #ffcf78; outline-offset: 3px; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #ffcf78; outline-offset: 3px; }
 
 .settings { width: min(390px, 100%); max-height: 340px; margin-top: 15px; padding: 15px 16px 13px; overflow: hidden; border-left: 2px solid #f4bb57; background: rgb(4 14 22 / 72%); font-size: 10px; font-weight: 700; letter-spacing: .1em; transition: opacity .2s, max-height .25s, margin .25s, padding .25s; }
 .settings.hidden { max-height: 0; margin-top: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
@@ -116,6 +116,10 @@ button:focus-visible, input:focus-visible { outline: 2px solid #ffcf78; outline-
 .setting-row output { color: #ffc45f; font-variant-numeric: tabular-nums; }
 .setting-row small { display: block; margin-top: 7px; color: #9eb0ad; font-size: 8px; font-weight: 600; letter-spacing: .04em; line-height: 1.45; }
 .audio-setting { padding-top: 6px; padding-bottom: 9px; }
+.graphics-setting { padding-top: 2px; padding-bottom: 11px; }
+.graphics-setting label { display: block; }
+.graphics-setting select { width: 100%; margin-top: 8px; padding: 8px 9px; border: 1px solid rgb(238 245 239 / 28%); border-radius: 2px; color: #eff4ef; background: #102129; font: inherit; font-size: 9px; font-weight: 800; letter-spacing: .08em; cursor: pointer; }
+.graphics-setting option { color: #102129; background: #f1f4ef; }
 input[type='range'] { width: 100%; height: 15px; margin: 8px 0 0; accent-color: #f4bb57; cursor: pointer; }
 .toggle-setting { display: flex; align-items: center; gap: 8px; padding-top: 10px; border-top: 1px solid rgb(232 244 237 / 16%); color: #e5ece6; cursor: pointer; }
 .toggle-setting input { position: absolute; inline-size: 1px; block-size: 1px; opacity: 0; }
