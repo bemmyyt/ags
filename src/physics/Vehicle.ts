@@ -82,7 +82,7 @@ export class Vehicle {
       const contact = mount.clone().addScaledVector(DOWN, hit.timeOfImpact); const pointVelocity = this.velocityAtPoint(contact, bodyPosition, velocity); const verticalVelocity = pointVelocity.dot(UP);
       // Conservative, overdamped suspension: enough travel to show weight transfer
       // without the energy gain that can launch a light browser physics chassis.
-      const spring = THREE.MathUtils.clamp(compression * 18000 - verticalVelocity * 5200, 0, 5200); this.applyForce(UP, spring, contact);
+      const spring = THREE.MathUtils.clamp(compression * 18000 - verticalVelocity * 5200, 0, 5200); this.applyForce(UP, spring, contact, dt);
       const wheelForward = forward.clone(); if (wheel.front) wheelForward.applyAxisAngle(UP, this.steering);
       const wheelRight = new THREE.Vector3(1, 0, 0).applyQuaternion(rotation); if (wheel.front) wheelRight.applyAxisAngle(UP, this.steering);
       const longitudinal = pointVelocity.dot(wheelForward); const lateral = pointVelocity.dot(wheelRight); lateralVelocity += lateral;
@@ -90,10 +90,10 @@ export class Vehicle {
       const lateralForce = THREE.MathUtils.clamp(-lateral * 12500, -peakGrip, peakGrip);
       let longitudinalForce = -longitudinal * 120; if (!wheel.front) longitudinalForce += driveForce * 0.5; if (braking) longitudinalForce += -Math.sign(longitudinal || forwardSpeed) * 6500;
       const availableLongitudinal = Math.sqrt(Math.max(0, peakGrip * peakGrip - lateralForce * lateralForce)); longitudinalForce = THREE.MathUtils.clamp(longitudinalForce, -availableLongitudinal, availableLongitudinal);
-      const force = wheelForward.multiplyScalar(longitudinalForce).add(wheelRight.multiplyScalar(lateralForce)); this.body.addForceAtPoint(force, contact, true);
+      const force = wheelForward.multiplyScalar(longitudinalForce).add(wheelRight.multiplyScalar(lateralForce)); this.body.applyImpulseAtPoint({ x: force.x * dt, y: force.y * dt, z: force.z * dt }, contact, true);
     }
     this.grounded = contacts > 0;
-    if (contacts) { const drag = velocity.clone().multiplyScalar(-speed * 0.72); this.body.addForce({ x: drag.x, y: 0, z: drag.z }, true); this.body.addForce({ x: 0, y: -Math.min(speed * speed * 2.1, 2100), z: 0 }, true); }
+    if (contacts) { const drag = velocity.clone().multiplyScalar(-speed * 0.72); this.body.applyImpulse({ x: drag.x * dt, y: 0, z: drag.z * dt }, true); this.body.applyImpulse({ x: 0, y: -Math.min(speed * speed * 2.1, 2100) * dt, z: 0 }, true); }
     // Prevent unrecoverable flips while retaining visible pitch and roll from tire loads.
     const uprightError = bodyUp.clone().cross(UP).multiplyScalar(1300); const angular = this.body.angvel();
     this.body.applyTorqueImpulse({ x: uprightError.x * dt - angular.x * 65 * dt, y: 0, z: uprightError.z * dt - angular.z * 65 * dt }, true);
@@ -105,7 +105,7 @@ export class Vehicle {
   }
 
   private velocityAtPoint(point: THREE.Vector3, bodyPosition: THREE.Vector3, linear: THREE.Vector3) { const angular = this.body.angvel(); return linear.clone().add(new THREE.Vector3(angular.x, angular.y, angular.z).cross(point.clone().sub(bodyPosition))); }
-  private applyForce(direction: THREE.Vector3, magnitude: number, point: THREE.Vector3) { this.body.addForceAtPoint({ x: direction.x * magnitude, y: direction.y * magnitude, z: direction.z * magnitude }, point, true); }
+  private applyForce(direction: THREE.Vector3, magnitude: number, point: THREE.Vector3, dt: number) { this.body.applyImpulseAtPoint({ x: direction.x * magnitude * dt, y: direction.y * magnitude * dt, z: direction.z * magnitude * dt }, point, true); }
   private syncVisual(rotation: THREE.Quaternion, speed: number, lateral: number, dt: number) {
     const p = this.body.translation(); this.model.position.set(p.x, p.y, p.z); this.model.quaternion.copy(rotation); this.visualRoll = THREE.MathUtils.damp(this.visualRoll, THREE.MathUtils.clamp(-lateral * 0.018, -0.09, 0.09), 7, dt); this.model.rotateZ(this.visualRoll);
     this.wheelAngle += speed * dt / WHEEL_RADIUS;
